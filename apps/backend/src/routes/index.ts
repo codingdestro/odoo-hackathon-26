@@ -1,12 +1,12 @@
 import { Router } from "express";
-import authRouter from "./auth/index.js";
-import dashboardRouter from "./dashboard.js";
-import driversRouter from "./drivers.js";
-import expensesRouter from "./expenses.js";
-import fuelLogsRouter from "./fuel-logs.js";
-import maintenanceRouter from "./maintenance.js";
-import tripsRouter from "./trips.js";
-import vehiclesRouter from "./vehicles.js";
+import authRouter from "./auth";
+import dashboardRouter from "./dashboard";
+import driversRouter from "./drivers";
+import expensesRouter from "./expenses";
+import fuelLogsRouter from "./fuel-logs";
+import maintenanceRouter from "./maintenance";
+import tripsRouter from "./trips";
+import vehiclesRouter from "./vehicles";
 
 const router = Router();
 
