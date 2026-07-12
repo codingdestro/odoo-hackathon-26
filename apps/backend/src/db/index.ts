@@ -1,4 +1,4 @@
-//@ts-expect-error
+//@ts-expect-error Bun's sqlite on runtime
 import { Database } from "bun:sqlite";
 import path from "node:path";
 import { mkdirSync } from "node:fs";
