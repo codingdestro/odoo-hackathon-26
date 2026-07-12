@@ -1,3 +1,4 @@
+// @ts-expect-error Bun runtime provides this module.
 import { Database } from "bun:sqlite";
 import path from "node:path";
 
