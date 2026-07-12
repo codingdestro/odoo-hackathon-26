@@ -8,6 +8,8 @@ import maintenanceRouter from "./maintenance";
 import tripsRouter from "./trips";
 import vehiclesRouter from "./vehicles";
 
+import reportsRouter from "./reports.js";
+
 const router = Router();
 
 router.get("/health", (_req, res) => {
@@ -20,6 +22,7 @@ router.use("/drivers", driversRouter);
 router.use("/expenses", expensesRouter);
 router.use("/fuel-logs", fuelLogsRouter);
 router.use("/maintenance", maintenanceRouter);
+router.use("/reports", reportsRouter);
 router.use("/trips", tripsRouter);
 router.use("/vehicles", vehiclesRouter);
 

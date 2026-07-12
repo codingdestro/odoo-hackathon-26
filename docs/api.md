@@ -138,6 +138,64 @@ If any update fails, the entire transaction rolls back.
 - **Other expenses** — from `expenses` table
 - **Total** — sum of all three
 
+## Dashboard
+
+| Method | Path | Auth | Query Params | Response |
+|--------|------|------|-------------|----------|
+| `GET` | `/dashboard` | `*` | `?vehicleType=&status=` | KPIs + recent trips |
+
+Supports optional filters: `?vehicleType=Truck` and `?status=AVAILABLE`.
+
+Returns:
+```json
+{
+  "vehicles": { "total", "active", "available", "inShop", "onTrip", "retired", "byType": [...], "utilizationPercent" },
+  "drivers": { "total", "available", "onDuty", "offDuty", "suspended" },
+  "trips": { "total", "active", "pending", "completed", "cancelled" },
+  "costs": { "totalFuel", "totalMaintenance", "totalExpenses" },
+  "recentTrips": [{ "id", "tripNumber", "source", "destination", "vehicleReg", "driverName", "cargoWeight", "status", "createdAt" }]
+}
+```
+
+## Reports
+
+| Method | Path | Auth | Response |
+|--------|------|------|----------|
+| `GET` | `/reports/analytics` | `*` | Fleet analytics JSON |
+| `GET` | `/reports/export/csv` | `*` | CSV file download |
+
+### `GET /reports/analytics`
+
+Returns fleet-wide KPIs + per-vehicle report:
+
+```json
+{
+  "utilizationPercent": 30,
+  "totalRevenue": 500000,
+  "totalFuelCost": 80000,
+  "totalMaintenanceCost": 45000,
+  "totalExpenses": 25000,
+  "totalOperationalCost": 150000,
+  "avgFuelEfficiency": 8.5,
+  "vehicleReports": [{
+    "registrationNumber", "model", "vehicleType", "status",
+    "totalTrips", "totalDistance", "totalFuelConsumed",
+    "fuelEfficiency", "totalRevenue", "maintenanceCost",
+    "fuelCost", "otherExpenses", "operationalCost",
+    "acquisitionCost", "roi"
+  }]
+}
+```
+
+**Computed metrics:**
+- **Fuel Efficiency** = Total Distance / Total Fuel (km/L)
+- **Operational Cost** = Maintenance + Fuel + Other Expenses
+- **ROI** = (Revenue - Operational Cost) / Acquisition Cost
+
+### `GET /reports/export/csv`
+
+Downloads `fleet-report.csv` with all vehicle report columns + fleet summary rows.
+
 ## Health
 
 | Method | Path | Auth | Response |

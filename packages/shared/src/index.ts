@@ -2,13 +2,28 @@ import { z } from "zod";
 
 // ── Enums ────────────────────────────────────────────────────────────────────
 
-export const VehicleStatus = z.enum(["AVAILABLE", "ON_TRIP", "IN_SHOP", "RETIRED"]);
+export const VehicleStatus = z.enum([
+  "AVAILABLE",
+  "ON_TRIP",
+  "IN_SHOP",
+  "RETIRED",
+]);
 export type VehicleStatus = z.infer<typeof VehicleStatus>;
 
-export const DriverStatus = z.enum(["AVAILABLE", "ON_TRIP", "OFF_DUTY", "SUSPENDED"]);
+export const DriverStatus = z.enum([
+  "AVAILABLE",
+  "ON_TRIP",
+  "OFF_DUTY",
+  "SUSPENDED",
+]);
 export type DriverStatus = z.infer<typeof DriverStatus>;
 
-export const TripStatus = z.enum(["DRAFT", "DISPATCHED", "COMPLETED", "CANCELLED"]);
+export const TripStatus = z.enum([
+  "DRAFT",
+  "DISPATCHED",
+  "COMPLETED",
+  "CANCELLED",
+]);
 export type TripStatus = z.infer<typeof TripStatus>;
 
 export const MaintenanceStatus = z.enum(["ACTIVE", "COMPLETED"]);
@@ -45,7 +60,11 @@ export const CreateUserSchema = z.object({
   email: z.string().email(),
   password: z.string().min(6),
 });
-export const UpdateUserSchema = CreateUserSchema.pick({ name: true, email: true, roleId: true }).partial();
+export const UpdateUserSchema = CreateUserSchema.pick({
+  name: true,
+  email: true,
+  roleId: true,
+}).partial();
 export type User = z.infer<typeof UserSchema>;
 export type CreateUser = z.infer<typeof CreateUserSchema>;
 export type UpdateUser = z.infer<typeof UpdateUserSchema>;
@@ -128,7 +147,7 @@ export const TripSchema = z.object({
   createdAt: z.string().datetime(),
 });
 export const CreateTripSchema = z.object({
-  tripNumber: z.string().min(1),
+  tripNumber: z.string().min(1).optional(),
   vehicleId: z.string().uuid(),
   driverId: z.string().uuid(),
   source: z.string().min(1),
@@ -250,7 +269,10 @@ export const ItemSchema = z.object({
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
 });
-export const CreateItemSchema = ItemSchema.pick({ name: true, description: true });
+export const CreateItemSchema = ItemSchema.pick({
+  name: true,
+  description: true,
+});
 export const UpdateItemSchema = CreateItemSchema.partial();
 export type Item = z.infer<typeof ItemSchema>;
 export type CreateItem = z.infer<typeof CreateItemSchema>;

@@ -30,3 +30,15 @@ export async function authRequired(
     res.status(401).json({ error: "Invalid or expired token" });
   }
 }
+
+export function authorize(...roles: string[]) {
+  return (req: Request, res: Response, next: NextFunction) => {
+    const role = req.user?.roleName;
+    if (!role || !roles.includes(role)) {
+      res.status(403).json({ error: "Insufficient permissions" });
+      return;
+    }
+    next();
+  };
+}
+

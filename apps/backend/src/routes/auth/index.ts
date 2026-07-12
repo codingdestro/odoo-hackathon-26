@@ -82,7 +82,8 @@ router.post("/signin", async (req: Request, res: Response) => {
     return;
   }
 
-  const token = await createToken({ userId: row.id, roleId: row.roleId });
+  const roleName = (db.query("SELECT name FROM roles WHERE id = ?").get(row.roleId) as { name: string } | undefined)?.name || "UNKNOWN";
+  const token = await createToken({ userId: row.id, roleId: row.roleId, roleName });
 
   const user = db
     .query(`SELECT ${userCols} FROM users WHERE id = ?`)

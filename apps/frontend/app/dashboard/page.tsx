@@ -53,6 +53,18 @@ export default function DashboardOverview() {
   const { user } = useAuth();
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [roleName, setRoleName] = useState<string>("");
+
+  useEffect(() => {
+    if (user?.roleId) {
+      api.get("/auth/roles").then((res) => {
+        const roles = res.data as { id: string; name: string }[];
+        const role = roles.find((r) => r.id === user.roleId);
+        if (role) setRoleName(role.name);
+      }).catch(() => {});
+    }
+  }, [user?.roleId]);
   const [typeFilter, setTypeFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
 
@@ -63,8 +75,8 @@ export default function DashboardOverview() {
     if (statusFilter) params.set("status", statusFilter);
     api
       .get(`/dashboard?${params.toString()}`)
-      .then((res) => setData(res.data))
-      .catch(console.error)
+      .then((res) => { setData(res.data); setError(null); })
+      .catch((err) => setError(err instanceof Error ? err.message : "Failed to load dashboard"))
       .finally(() => setLoading(false));
   }, [typeFilter, statusFilter]);
 
@@ -72,8 +84,22 @@ export default function DashboardOverview() {
     fetchDashboard();
   }, [fetchDashboard]);
 
-  if (loading || !data) {
+  if (loading) {
     return <p className="text-slate-500">Loading...</p>;
+  }
+
+  if (error) {
+    return (
+      <div className="bg-rose-50 border border-rose-200 rounded-lg p-6 text-center">
+        <p className="text-rose-700 font-medium">Failed to load dashboard</p>
+        <p className="text-sm text-rose-500 mt-1">{error}</p>
+        <button onClick={fetchDashboard} className="mt-3 text-sm text-blue-600 hover:underline">Retry</button>
+      </div>
+    );
+  }
+
+  if (!data) {
+    return <p className="text-slate-500">No data available.</p>;
   }
 
   const { vehicles, drivers, trips, costs, recentTrips } = data;
@@ -83,7 +109,14 @@ export default function DashboardOverview() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Dashboard</h1>
-          <p className="text-sm text-slate-500 mt-1">Welcome back, {user?.name}</p>
+          <p className="text-sm text-slate-500 mt-1">
+            Welcome back, {user?.name}
+            {roleName && (
+              <span className="ml-2 inline-block px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-700 align-middle">
+                {roleName}
+              </span>
+            )}
+          </p>
         </div>
 
         <div className="flex items-center gap-3">

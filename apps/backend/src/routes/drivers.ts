@@ -4,13 +4,14 @@ import {
   DriverStatus,
   UpdateDriverSchema,
 } from "@odoo-hackathon-26/shared";
-import { authRequired } from "../util/auth";
+import { authRequired, authorize } from "../util/auth";
 import { driverService } from "../services/driver.service";
 import { DuplicateError } from "../services/errors";
 
 const router = Router();
 
 router.use(authRequired);
+router.use(authorize("ADMIN", "FLEET_MANAGER", "SAFETY_OFFICER"));
 
 // GET /api/drivers
 router.get("/", (_req: Request, res: Response) => {

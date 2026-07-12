@@ -29,6 +29,11 @@ export const authService = {
     return row !== null;
   },
 
+  getRoleName(roleId: string): string | undefined {
+    const row = db.query("SELECT name FROM roles WHERE id = ?").get(roleId) as { name: string } | undefined;
+    return row?.name;
+  },
+
   async signin(data: SignIn): Promise<{ token: string; user: User } | null> {
     const row = db
       .query("SELECT id, role_id AS roleId, password_hash AS passwordHash, is_active AS isActive FROM users WHERE email = ?")
@@ -40,7 +45,8 @@ export const authService = {
     const valid = Bun.password.verifySync(data.password, row.passwordHash);
     if (!valid) return null;
 
-    const token = await createToken({ userId: row.id, roleId: row.roleId });
+    const roleName = this.getRoleName(row.roleId) || "UNKNOWN";
+    const token = await createToken({ userId: row.id, roleId: row.roleId, roleName });
     const user = db.query(`SELECT ${userCols} FROM users WHERE id = ?`).get(row.id) as User;
 
     return { token, user };

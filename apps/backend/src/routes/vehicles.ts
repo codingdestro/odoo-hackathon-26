@@ -3,7 +3,7 @@ import {
   CreateVehicleSchema,
   UpdateVehicleSchema,
 } from "@odoo-hackathon-26/shared";
-import { authRequired } from "../util/auth";
+import { authRequired, authorize } from "../util/auth";
 import { vehicleService } from "../services/vehicle.service";
 import { DuplicateError } from "../services/errors";
 
@@ -11,13 +11,16 @@ const router = Router();
 
 router.use(authRequired);
 
+const viewRoles = ["ADMIN", "FLEET_MANAGER", "DISPATCHER"];
+const mutateRoles = ["ADMIN", "FLEET_MANAGER"];
+
 // GET /api/vehicles
-router.get("/", (_req: Request, res: Response) => {
+router.get("/", authorize(...viewRoles), (_req: Request, res: Response) => {
   res.json(vehicleService.list());
 });
 
 // GET /api/vehicles/:id
-router.get("/:id", (req: Request, res: Response) => {
+router.get("/:id", authorize(...viewRoles), (req: Request, res: Response) => {
   const vehicle = vehicleService.getById(req.params.id as string);
   if (!vehicle) {
     res.status(404).json({ error: "Vehicle not found" });
@@ -27,7 +30,7 @@ router.get("/:id", (req: Request, res: Response) => {
 });
 
 // POST /api/vehicles
-router.post("/", (req: Request, res: Response) => {
+router.post("/", authorize(...mutateRoles), (req: Request, res: Response) => {
   const parsed = CreateVehicleSchema.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.flatten() });
@@ -46,7 +49,7 @@ router.post("/", (req: Request, res: Response) => {
 });
 
 // PUT /api/vehicles/:id
-router.put("/:id", (req: Request, res: Response) => {
+router.put("/:id", authorize(...mutateRoles), (req: Request, res: Response) => {
   const parsed = UpdateVehicleSchema.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.flatten() });
@@ -72,7 +75,7 @@ router.put("/:id", (req: Request, res: Response) => {
 });
 
 // DELETE /api/vehicles/:id
-router.delete("/:id", (req: Request, res: Response) => {
+router.delete("/:id", authorize(...mutateRoles), (req: Request, res: Response) => {
   const deleted = vehicleService.delete(req.params.id as string);
   if (!deleted) {
     res.status(404).json({ error: "Vehicle not found" });

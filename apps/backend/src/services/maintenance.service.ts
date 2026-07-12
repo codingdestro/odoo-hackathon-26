@@ -6,6 +6,7 @@ import type {
   Vehicle,
 } from "@odoo-hackathon-26/shared";
 import db from "../db/index";
+import { ApiError } from "./errors";
 
 const cols =
   "id, vehicle_id AS vehicleId, title, description, maintenance_cost AS maintenanceCost, start_date AS startDate, end_date AS endDate, status, created_at AS createdAt";
@@ -42,23 +43,17 @@ export const maintenanceService = {
       .get(data.vehicleId) as Vehicle | undefined;
 
     if (!vehicle) {
-      const err = new Error("Vehicle not found");
-      (err as any).status = 404;
-      throw err;
+      throw ApiError.notFound("Vehicle");
     }
     if (vehicle.status === "ON_TRIP") {
-      const err = new Error(
+      throw ApiError.badRequest(
         `Vehicle "${vehicle.registrationNumber}" is on a trip and cannot enter maintenance`,
       );
-      (err as any).status = 400;
-      throw err;
     }
     if (vehicle.status === "RETIRED") {
-      const err = new Error(
+      throw ApiError.badRequest(
         `Vehicle "${vehicle.registrationNumber}" is retired`,
       );
-      (err as any).status = 400;
-      throw err;
     }
 
     const createFn = db.transaction(() => {
@@ -131,14 +126,10 @@ export const maintenanceService = {
   complete(id: string, endDate?: string): MaintenanceLog {
     const log = this.getById(id);
     if (!log) {
-      const err = new Error("Maintenance log not found");
-      (err as any).status = 404;
-      throw err;
+      throw ApiError.notFound("Maintenance log");
     }
     if (log.status !== "ACTIVE") {
-      const err = new Error("Only ACTIVE maintenance can be completed");
-      (err as any).status = 400;
-      throw err;
+      throw ApiError.badRequest("Only ACTIVE maintenance can be completed");
     }
 
     const now = new Date().toISOString();
