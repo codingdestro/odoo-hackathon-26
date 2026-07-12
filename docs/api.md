@@ -84,6 +84,31 @@ If any update fails, the entire transaction rolls back.
 - Vehicle → status = `AVAILABLE`
 - Driver → status = `AVAILABLE`
 
+## Maintenance
+
+| Method | Path | Auth | Body Schema | Response |
+|--------|------|------|-------------|----------|
+| `GET` | `/maintenance` | `*` | — | `MaintenanceLogSchema[]` |
+| `GET` | `/maintenance/:id` | `*` | — | `MaintenanceLogSchema` |
+| `POST` | `/maintenance` | `*` | `CreateMaintenanceLogSchema` | `MaintenanceLogSchema` (201) |
+| `PUT` | `/maintenance/:id` | `*` | `UpdateMaintenanceLogSchema` | `MaintenanceLogSchema` |
+| `POST` | `/maintenance/:id/complete` | `*` | `{ endDate? }` | `MaintenanceLogSchema` |
+| `DELETE` | `/maintenance/:id` | `*` | — | 204 |
+
+### Maintenance Rules
+
+`POST /maintenance` — creating a maintenance record (single transaction):
+- Vehicle must exist
+- Vehicle must not be `ON_TRIP` or `RETIRED`
+- Maintenance log → created with `ACTIVE` status
+- Vehicle → status = `IN_SHOP` (hidden from dispatch)
+
+`POST /maintenance/:id/complete` (single transaction):
+- Maintenance must be `ACTIVE`
+- Optional body: `{ endDate }`
+- Maintenance → status = `COMPLETED`, `end_date` = now
+- Vehicle → status = `AVAILABLE`
+
 ## Health
 
 | Method | Path | Auth | Response |
@@ -92,6 +117,6 @@ If any update fails, the entire transaction rolls back.
 
 ---
 
-**Enums**: `VehicleStatus` (`AVAILABLE` | `ON_TRIP` | `IN_SHOP` | `RETIRED`), `DriverStatus` (`AVAILABLE` | `ON_TRIP` | `OFF_DUTY` | `SUSPENDED`), `TripStatus` (`DRAFT` | `DISPATCHED` | `COMPLETED` | `CANCELLED`).
+**Enums**: `VehicleStatus` (`AVAILABLE` | `ON_TRIP` | `IN_SHOP` | `RETIRED`), `DriverStatus` (`AVAILABLE` | `ON_TRIP` | `OFF_DUTY` | `SUSPENDED`), `TripStatus` (`DRAFT` | `DISPATCHED` | `COMPLETED` | `CANCELLED`), `MaintenanceStatus` (`ACTIVE` | `COMPLETED`).
 
 All schemas defined in `@odoo-hackathon-26/shared`.
