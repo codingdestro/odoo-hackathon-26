@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@odoo-hackathon-26/shared": "workspace:*",
+    "bun": "^1.3.14",
     "cors": "^2.8.6",
     "express": "^5.2.1",
     "jose": "^6.2.3",

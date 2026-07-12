@@ -1,4 +1,3 @@
-//@ts-expect-error
 import { Database } from "bun:sqlite";
 import path from "node:path";
 import { mkdirSync } from "node:fs";
@@ -21,6 +20,25 @@ db.run(`
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
   )
 `);
+
+// Seed default roles
+const seedRoles = [
+  "ADMIN",
+  "FLEET_MANAGER",
+  "DISPATCHER",
+  "SAFETY_OFFICER",
+  "FINANCIAL_ANALYST",
+];
+const insertRole = db.prepare(
+  "INSERT OR IGNORE INTO roles (id, name) VALUES (?, ?)",
+);
+const seedFn = db.transaction(() => {
+  for (const name of seedRoles) {
+    const id = crypto.randomUUID();
+    insertRole.run(id, name);
+  }
+});
+seedFn();
 
 // Users Table
 db.run(`

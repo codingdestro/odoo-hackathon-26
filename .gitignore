@@ -6,3 +6,5 @@ dist
 *.db-journal
 .env
 .env.local
+
+db/pool
