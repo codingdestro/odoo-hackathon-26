@@ -7,4 +7,4 @@ dist
 .env
 .env.local
 
-db/pool
+pool
