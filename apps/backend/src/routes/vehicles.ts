@@ -5,6 +5,7 @@ import {
 } from "@odoo-hackathon-26/shared";
 import { authRequired } from "../util/auth";
 import { vehicleService } from "../services/vehicle.service";
+import { DuplicateError } from "../services/errors";
 
 const router = Router();
 
@@ -59,7 +60,7 @@ router.put("/:id", (req: Request, res: Response) => {
       return;
     }
     res.json(result);
-  } catch (err) {
+  } catch (err: unknown) {
     if (err instanceof DuplicateError) {
       res.status(409).json({
         error: { fieldErrors: { registrationNumber: [err.message] } },

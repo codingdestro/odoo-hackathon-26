@@ -40,7 +40,7 @@ export const driverService = {
 
     if (data.licenseNumber !== undefined && data.licenseNumber !== existing.licenseNumber) {
       const dup = this.findByLicenseNumber(data.licenseNumber);
-      if (dup) return null;
+      if (dup) return undefined;
       db.run("UPDATE drivers SET license_number = ?, updated_at = ? WHERE id = ?", [data.licenseNumber, now, id]);
     }
 

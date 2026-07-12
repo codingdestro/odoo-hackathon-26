@@ -1,6 +1,7 @@
 import { v4 as uuid } from "uuid";
 import type { CreateVehicle, UpdateVehicle, Vehicle } from "@odoo-hackathon-26/shared";
 import db from "../db/index";
+import { DuplicateError } from "./errors";
 
 const cols =
   "id, registration_number AS registrationNumber, model, vehicle_type AS vehicleType, max_load_capacity AS maxLoadCapacity, odometer, acquisition_cost AS acquisitionCost, status, created_at AS createdAt, updated_at AS updatedAt";

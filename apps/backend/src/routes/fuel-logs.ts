@@ -42,7 +42,7 @@ router.put("/:id", (req: Request, res: Response) => {
   if (!parsed.success) { res.status(400).json({ error: parsed.error.flatten() }); return; }
 
   const d = parsed.data;
-  const set = (col: string, val: unknown) => db.run(`UPDATE ${table} SET ${col} = ? WHERE id = ?`, [val, id]);
+  const set = (col: string, val: any) => db.run(`UPDATE ${table} SET ${col} = ? WHERE id = ?`, [val, id]);
 
   if (d.vehicleId !== undefined) set("vehicle_id", d.vehicleId);
   if (d.tripId !== undefined) set("trip_id", d.tripId);
