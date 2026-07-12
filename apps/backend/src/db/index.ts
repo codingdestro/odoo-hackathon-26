@@ -1,8 +1,10 @@
 import { Database } from "bun:sqlite";
 import path from "node:path";
 import { mkdirSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 
-const DB_DIR = path.join(import.meta.dirname, "pool");
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const DB_DIR = process.env.DB_DIR || path.join(__dirname, "pool");
 mkdirSync(DB_DIR, { recursive: true });
 
 const DB_PATH = path.join(DB_DIR, "data.db");
