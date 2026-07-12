@@ -119,6 +119,25 @@ If any update fails, the entire transaction rolls back.
 | `PUT` | `/fuel-logs/:id` | `*` | `UpdateFuelLogSchema` | `FuelLogSchema` |
 | `DELETE` | `/fuel-logs/:id` | `*` | — | 204 |
 
+## Expenses
+
+| Method | Path | Auth | Body Schema | Response |
+|--------|------|------|-------------|----------|
+| `GET` | `/expenses` | `*` | — | `ExpenseSchema[]` |
+| `GET` | `/expenses/summaries` | `*` | — | `[{ vehicleId, registrationNumber, fuelCost, maintenanceCost, otherExpenses, totalCost }]` |
+| `GET` | `/expenses/:id` | `*` | — | `ExpenseSchema` |
+| `POST` | `/expenses` | `*` | `CreateExpenseSchema` | `ExpenseSchema` (201) |
+| `PUT` | `/expenses/:id` | `*` | `UpdateExpenseSchema` | `ExpenseSchema` |
+| `DELETE` | `/expenses/:id` | `*` | — | 204 |
+
+### Cost Summary
+
+`GET /expenses/summaries` computes total operational cost per vehicle by summing:
+- **Fuel cost** — from `fuel_logs` table
+- **Maintenance cost** — from `maintenance_logs` table
+- **Other expenses** — from `expenses` table
+- **Total** — sum of all three
+
 ## Health
 
 | Method | Path | Auth | Response |
