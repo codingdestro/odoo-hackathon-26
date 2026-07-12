@@ -109,6 +109,16 @@ If any update fails, the entire transaction rolls back.
 - Maintenance → status = `COMPLETED`, `end_date` = now
 - Vehicle → status = `AVAILABLE`
 
+## Fuel Logs
+
+| Method | Path | Auth | Body Schema | Response |
+|--------|------|------|-------------|----------|
+| `GET` | `/fuel-logs` | `*` | — | `FuelLogSchema[]` |
+| `GET` | `/fuel-logs/:id` | `*` | — | `FuelLogSchema` |
+| `POST` | `/fuel-logs` | `*` | `CreateFuelLogSchema` | `FuelLogSchema` (201) |
+| `PUT` | `/fuel-logs/:id` | `*` | `UpdateFuelLogSchema` | `FuelLogSchema` |
+| `DELETE` | `/fuel-logs/:id` | `*` | — | 204 |
+
 ## Health
 
 | Method | Path | Auth | Response |
