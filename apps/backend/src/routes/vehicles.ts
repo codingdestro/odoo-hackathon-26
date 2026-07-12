@@ -36,11 +36,7 @@ router.post("/", (req: Request, res: Response) => {
 
   if (vehicleService.findByRegistration(parsed.data.registrationNumber)) {
     res.status(409).json({
-      error: {
-        fieldErrors: {
-          registrationNumber: ["Registration number already exists"],
-        },
-      },
+      error: { fieldErrors: { registrationNumber: ["Registration number already exists"] } },
     });
     return;
   }
@@ -64,7 +60,7 @@ router.put("/:id", (req: Request, res: Response) => {
       return;
     }
     res.json(result);
-  } catch (err) {
+  } catch (err: unknown) {
     if (err instanceof DuplicateError) {
       res.status(409).json({
         error: { fieldErrors: { registrationNumber: [err.message] } },

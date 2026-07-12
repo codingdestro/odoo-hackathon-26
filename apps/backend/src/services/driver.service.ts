@@ -39,9 +39,8 @@ export const driverService = {
     const now = new Date().toISOString();
 
     if (data.licenseNumber !== undefined && data.licenseNumber !== existing.licenseNumber) {
-      if (this.findByLicenseNumber(data.licenseNumber)) {
-        throw new DuplicateError("License number already exists");
-      }
+      const dup = this.findByLicenseNumber(data.licenseNumber);
+      if (dup) return undefined;
       db.run("UPDATE drivers SET license_number = ?, updated_at = ? WHERE id = ?", [data.licenseNumber, now, id]);
     }
 

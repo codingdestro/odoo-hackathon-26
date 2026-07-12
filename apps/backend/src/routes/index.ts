@@ -1,8 +1,12 @@
 import { Router } from "express";
-import authRouter from "./auth/index";
+import authRouter from "./auth";
+import dashboardRouter from "./dashboard";
 import driversRouter from "./drivers";
-import vehiclesRouter from "./vehicles";
+import expensesRouter from "./expenses";
+import fuelLogsRouter from "./fuel-logs";
+import maintenanceRouter from "./maintenance";
 import tripsRouter from "./trips";
+import vehiclesRouter from "./vehicles";
 
 const router = Router();
 
@@ -11,8 +15,12 @@ router.get("/health", (_req, res) => {
 });
 
 router.use("/auth", authRouter);
+router.use("/dashboard", dashboardRouter);
 router.use("/drivers", driversRouter);
-router.use("/vehicles", vehiclesRouter);
+router.use("/expenses", expensesRouter);
+router.use("/fuel-logs", fuelLogsRouter);
+router.use("/maintenance", maintenanceRouter);
 router.use("/trips", tripsRouter);
+router.use("/vehicles", vehiclesRouter);
 
 export default router;
