@@ -143,15 +143,21 @@ export const maintenanceService = {
 
     const now = new Date().toISOString();
 
+    const vehicle = db
+      .query("SELECT id, status FROM vehicles WHERE id = ?")
+      .get(log.vehicleId) as { id: string; status: string } | undefined;
+
     const completeFn = db.transaction(() => {
       db.run(
         "UPDATE maintenance_logs SET status = 'COMPLETED', end_date = ? WHERE id = ?",
         [endDate ?? now, id],
       );
-      db.run(
-        "UPDATE vehicles SET status = 'AVAILABLE', updated_at = ? WHERE id = ?",
-        [now, log.vehicleId],
-      );
+      if (vehicle && vehicle.status !== "RETIRED") {
+        db.run(
+          "UPDATE vehicles SET status = 'AVAILABLE', updated_at = ? WHERE id = ?",
+          [now, log.vehicleId],
+        );
+      }
     });
 
     completeFn();
