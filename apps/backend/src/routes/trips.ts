@@ -61,6 +61,29 @@ router.post("/:id/dispatch", (req: Request, res: Response) => {
   }
 });
 
+// POST /api/trips/:id/complete
+router.post("/:id/complete", (req: Request, res: Response) => {
+  try {
+    const { endOdometer, fuelConsumed } = req.body as { endOdometer?: number; fuelConsumed?: number };
+    const trip = tripService.complete(req.params.id as string, endOdometer, fuelConsumed);
+    res.json(trip);
+  } catch (err: any) {
+    const status = err.status || 500;
+    res.status(status).json({ error: err.message });
+  }
+});
+
+// POST /api/trips/:id/cancel
+router.post("/:id/cancel", (_req: Request, res: Response) => {
+  try {
+    const trip = tripService.cancel(_req.params.id as string);
+    res.json(trip);
+  } catch (err: any) {
+    const status = err.status || 500;
+    res.status(status).json({ error: err.message });
+  }
+});
+
 // DELETE /api/trips/:id
 router.delete("/:id", (req: Request, res: Response) => {
   const deleted = tripService.delete(req.params.id as string);

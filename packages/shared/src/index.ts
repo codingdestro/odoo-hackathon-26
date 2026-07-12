@@ -128,7 +128,7 @@ export const TripSchema = z.object({
   createdAt: z.string().datetime(),
 });
 export const CreateTripSchema = z.object({
-  tripNumber: z.string().min(1),
+  tripNumber: z.string().min(1).optional(),
   vehicleId: z.string().uuid(),
   driverId: z.string().uuid(),
   source: z.string().min(1),

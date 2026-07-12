@@ -252,4 +252,74 @@ export const tripService = {
 
     return this.getById(tripId)!;
   },
+
+  complete(tripId: string, finalOdometer?: number, fuelConsumed?: number): Trip {
+    const trip = this.getById(tripId);
+    if (!trip) {
+      const err = new Error("Trip not found");
+      (err as any).status = 404;
+      throw err;
+    }
+    if (trip.status !== "DISPATCHED") {
+      const err = new Error("Only DISPATCHED trips can be completed");
+      (err as any).status = 400;
+      throw err;
+    }
+
+    const now = new Date().toISOString();
+
+    const completeFn = db.transaction(() => {
+      db.run(
+        "UPDATE trips SET status = 'COMPLETED', completed_at = ?, end_odometer = ?, fuel_consumed = ? WHERE id = ?",
+        [now, finalOdometer ?? null, fuelConsumed ?? null, tripId],
+      );
+      db.run(
+        "UPDATE vehicles SET status = 'AVAILABLE', updated_at = ? WHERE id = ?",
+        [now, trip.vehicleId],
+      );
+      db.run(
+        "UPDATE drivers SET status = 'AVAILABLE', updated_at = ? WHERE id = ?",
+        [now, trip.driverId],
+      );
+    });
+
+    completeFn();
+
+    return this.getById(tripId)!;
+  },
+
+  cancel(tripId: string): Trip {
+    const trip = this.getById(tripId);
+    if (!trip) {
+      const err = new Error("Trip not found");
+      (err as any).status = 404;
+      throw err;
+    }
+    if (trip.status !== "DRAFT" && trip.status !== "DISPATCHED") {
+      const err = new Error("Only DRAFT or DISPATCHED trips can be cancelled");
+      (err as any).status = 400;
+      throw err;
+    }
+
+    const now = new Date().toISOString();
+
+    const cancelFn = db.transaction(() => {
+      db.run(
+        "UPDATE trips SET status = 'CANCELLED' WHERE id = ?",
+        [tripId],
+      );
+      db.run(
+        "UPDATE vehicles SET status = 'AVAILABLE', updated_at = ? WHERE id = ?",
+        [now, trip.vehicleId],
+      );
+      db.run(
+        "UPDATE drivers SET status = 'AVAILABLE', updated_at = ? WHERE id = ?",
+        [now, trip.driverId],
+      );
+    });
+
+    cancelFn();
+
+    return this.getById(tripId)!;
+  },
 };

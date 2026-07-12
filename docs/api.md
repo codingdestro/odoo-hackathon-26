@@ -46,6 +46,8 @@ All `*`-marked routes require `Authorization: Bearer <token>`.
 | `POST` | `/trips` | `*` | `CreateTripSchema` | `TripSchema` (201) |
 | `PUT` | `/trips/:id` | `*` | `UpdateTripSchema` | `TripSchema` |
 | `POST` | `/trips/:id/dispatch` | `*` | — | `TripSchema` |
+| `POST` | `/trips/:id/complete` | `*` | `{ endOdometer?, fuelConsumed? }` | `TripSchema` |
+| `POST` | `/trips/:id/cancel` | `*` | — | `TripSchema` |
 | `DELETE` | `/trips/:id` | `*` | — | 204 |
 
 ### Dispatch Rules
@@ -64,6 +66,23 @@ On success (all checks pass, single transaction):
 - Driver → status = `ON_TRIP`
 
 If any update fails, the entire transaction rolls back.
+
+### Complete Trip
+
+`POST /trips/:id/complete` (single transaction):
+- Trip must be `DISPATCHED`
+- Optional body: `{ endOdometer, fuelConsumed }`
+- Trip → status = `COMPLETED`, `completed_at` = now, final odometer/fuel saved
+- Vehicle → status = `AVAILABLE`
+- Driver → status = `AVAILABLE`
+
+### Cancel Trip
+
+`POST /trips/:id/cancel` (single transaction):
+- Trip must be `DRAFT` or `DISPATCHED`
+- Trip → status = `CANCELLED`
+- Vehicle → status = `AVAILABLE`
+- Driver → status = `AVAILABLE`
 
 ## Health
 
