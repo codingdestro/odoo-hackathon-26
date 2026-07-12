@@ -9,9 +9,10 @@ const ALG = "HS256";
 export interface JwtPayload {
   userId: string;
   roleId: string;
+  roleName: string;
 }
 
-export async function createToken(payload: JwtPayload, expiresIn = "24h"): Promise<string> {
+export async function createToken(payload: { userId: string; roleId: string; roleName: string }, expiresIn = "24h"): Promise<string> {
   return new SignJWT({ ...payload })
     .setProtectedHeader({ alg: ALG })
     .setIssuedAt()

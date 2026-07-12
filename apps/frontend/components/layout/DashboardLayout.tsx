@@ -13,6 +13,7 @@ const navItems = [
   { href: "/dashboard/trips", label: "Trips" },
   { href: "/dashboard/maintenance", label: "Maintenance" },
   { href: "/dashboard/fuel-expenses", label: "Fuel & Expenses" },
+  { href: "/dashboard/reports", label: "Reports" },
 ];
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {

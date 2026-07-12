@@ -7,7 +7,7 @@ import type {
   Driver,
 } from "@odoo-hackathon-26/shared";
 import db from "../db/index";
-import { DuplicateError } from "./errors";
+import { ApiError } from "./errors";
 
 const cols =
   "id, trip_number AS tripNumber, vehicle_id AS vehicleId, driver_id AS driverId, source, destination, cargo_weight AS cargoWeight, planned_distance AS plannedDistance, actual_distance AS actualDistance, start_odometer AS startOdometer, end_odometer AS endOdometer, fuel_consumed AS fuelConsumed, revenue, status, dispatched_at AS dispatchedAt, completed_at AS completedAt, created_at AS createdAt";
@@ -163,14 +163,10 @@ export const tripService = {
   } {
     const trip = this.getById(tripId);
     if (!trip) {
-      const err = new Error("Trip not found");
-      (err as any).status = 404;
-      throw err;
+      throw ApiError.notFound("Trip");
     }
     if (trip.status !== "DRAFT") {
-      const err = new Error("Only DRAFT trips can be dispatched");
-      (err as any).status = 400;
-      throw err;
+      throw ApiError.badRequest("Only DRAFT trips can be dispatched");
     }
 
     const vehicle = db
@@ -179,16 +175,12 @@ export const tripService = {
       )
       .get(trip.vehicleId) as Vehicle | undefined;
     if (!vehicle) {
-      const err = new Error("Vehicle not found");
-      (err as any).status = 404;
-      throw err;
+      throw ApiError.notFound("Vehicle");
     }
     if (vehicle.status !== "AVAILABLE") {
-      const err = new Error(
+      throw ApiError.badRequest(
         `Vehicle "${vehicle.registrationNumber}" is not available (status: ${vehicle.status})`,
       );
-      (err as any).status = 400;
-      throw err;
     }
 
     const driver = db
@@ -197,32 +189,22 @@ export const tripService = {
       )
       .get(trip.driverId) as Driver | undefined;
     if (!driver) {
-      const err = new Error("Driver not found");
-      (err as any).status = 404;
-      throw err;
+      throw ApiError.notFound("Driver");
     }
     if (driver.status === "SUSPENDED") {
-      const err = new Error(`Driver "${driver.name}" is suspended`);
-      (err as any).status = 400;
-      throw err;
+      throw ApiError.badRequest(`Driver "${driver.name}" is suspended`);
     }
     if (driver.status === "ON_TRIP") {
-      const err = new Error(`Driver "${driver.name}" is already on a trip`);
-      (err as any).status = 400;
-      throw err;
+      throw ApiError.badRequest(`Driver "${driver.name}" is already on a trip`);
     }
     if (new Date(driver.licenseExpiry) < new Date()) {
-      const err = new Error(`Driver "${driver.name}" license has expired`);
-      (err as any).status = 400;
-      throw err;
+      throw ApiError.badRequest(`Driver "${driver.name}" license has expired`);
     }
 
     if (trip.cargoWeight > vehicle.maxLoadCapacity) {
-      const err = new Error(
+      throw ApiError.badRequest(
         `Cargo weight (${trip.cargoWeight}kg) exceeds vehicle capacity (${vehicle.maxLoadCapacity}kg)`,
       );
-      (err as any).status = 400;
-      throw err;
     }
 
     return { vehicle, driver, trip };
@@ -256,14 +238,10 @@ export const tripService = {
   complete(tripId: string, finalOdometer?: number, fuelConsumed?: number): Trip {
     const trip = this.getById(tripId);
     if (!trip) {
-      const err = new Error("Trip not found");
-      (err as any).status = 404;
-      throw err;
+      throw ApiError.notFound("Trip");
     }
     if (trip.status !== "DISPATCHED") {
-      const err = new Error("Only DISPATCHED trips can be completed");
-      (err as any).status = 400;
-      throw err;
+      throw ApiError.badRequest("Only DISPATCHED trips can be completed");
     }
 
     const now = new Date().toISOString();
@@ -291,14 +269,10 @@ export const tripService = {
   cancel(tripId: string): Trip {
     const trip = this.getById(tripId);
     if (!trip) {
-      const err = new Error("Trip not found");
-      (err as any).status = 404;
-      throw err;
+      throw ApiError.notFound("Trip");
     }
     if (trip.status !== "DRAFT" && trip.status !== "DISPATCHED") {
-      const err = new Error("Only DRAFT or DISPATCHED trips can be cancelled");
-      (err as any).status = 400;
-      throw err;
+      throw ApiError.badRequest("Only DRAFT or DISPATCHED trips can be cancelled");
     }
 
     const now = new Date().toISOString();

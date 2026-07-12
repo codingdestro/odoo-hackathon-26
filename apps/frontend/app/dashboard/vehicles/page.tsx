@@ -13,14 +13,16 @@ export default function VehiclesPage() {
   const { vehicles, loading, updateVehicle, deleteVehicle } = useVehicles();
   const [deleting, setDeleting] = useState<string | null>(null);
   const [statusUpdating, setStatusUpdating] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   async function handleDelete(id: string) {
     if (!confirm("Delete this vehicle?")) return;
     setDeleting(id);
+    setActionError(null);
     try {
       await deleteVehicle(id);
-    } catch (err) {
-      console.error(err);
+    } catch (err: unknown) {
+      setActionError(err instanceof Error ? err.message : "Delete failed");
     } finally {
       setDeleting(null);
     }
@@ -28,6 +30,7 @@ export default function VehiclesPage() {
 
   async function handleStatusChange(vehicle: Vehicle, newStatus: VehicleStatus) {
     setStatusUpdating(vehicle.id);
+    setActionError(null);
     try {
       await updateVehicle(vehicle.id, {
         registrationNumber: vehicle.registrationNumber,
@@ -38,8 +41,8 @@ export default function VehiclesPage() {
         acquisitionCost: vehicle.acquisitionCost,
         status: newStatus,
       });
-    } catch (err) {
-      console.error(err);
+    } catch (err: unknown) {
+      setActionError(err instanceof Error ? err.message : "Status update failed");
     } finally {
       setStatusUpdating(null);
     }
