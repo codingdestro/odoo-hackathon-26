@@ -1,96 +1,74 @@
 import { Router, Request, Response } from "express";
+import { v4 as uuid } from "uuid";
 import { CreateTripSchema, UpdateTripSchema } from "@odoo-hackathon-26/shared";
-import { authRequired } from "../util/auth";
-import { tripService } from "../services/trip.service";
+import db from "../db";
 
 const router = Router();
 
-router.use(authRequired);
+const table = "trips";
+const cols = "id, trip_number AS tripNumber, vehicle_id AS vehicleId, driver_id AS driverId, source, destination, cargo_weight AS cargoWeight, planned_distance AS plannedDistance, actual_distance AS actualDistance, start_odometer AS startOdometer, end_odometer AS endOdometer, fuel_consumed AS fuelConsumed, revenue, status, dispatched_at AS dispatchedAt, completed_at AS completedAt, created_at AS createdAt";
 
-// GET /api/trips
 router.get("/", (_req: Request, res: Response) => {
-  res.json(tripService.list());
+  const rows = db.query(`SELECT ${cols} FROM ${table} ORDER BY created_at DESC`).all();
+  res.json(rows);
 });
 
-// GET /api/trips/:id
 router.get("/:id", (req: Request, res: Response) => {
-  const trip = tripService.getById(req.params.id as string);
-  if (!trip) {
-    res.status(404).json({ error: "Trip not found" });
-    return;
-  }
-  res.json(trip);
+  const row = db.query(`SELECT ${cols} FROM ${table} WHERE id = ?`).get(req.params.id as string);
+  if (!row) { res.status(404).json({ error: "Not found" }); return; }
+  res.json(row);
 });
 
-// POST /api/trips
 router.post("/", (req: Request, res: Response) => {
   const parsed = CreateTripSchema.safeParse(req.body);
-  if (!parsed.success) {
-    res.status(400).json({ error: parsed.error.flatten() });
-    return;
-  }
+  if (!parsed.success) { res.status(400).json({ error: parsed.error.flatten() }); return; }
 
-  const trip = tripService.create(parsed.data);
-  res.status(201).json(trip);
+  const id = uuid();
+  const d = parsed.data;
+  db.run(
+    `INSERT INTO ${table} (id, trip_number, vehicle_id, driver_id, source, destination, cargo_weight, planned_distance, actual_distance, start_odometer, end_odometer, fuel_consumed, revenue, status, dispatched_at, completed_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [id, d.tripNumber, d.vehicleId, d.driverId, d.source, d.destination, d.cargoWeight, d.plannedDistance, d.actualDistance ?? null, d.startOdometer ?? null, d.endOdometer ?? null, d.fuelConsumed ?? null, d.revenue, d.status, d.dispatchedAt ?? null, d.completedAt ?? null]
+  );
+  const row = db.query(`SELECT ${cols} FROM ${table} WHERE id = ?`).get(id);
+  res.status(201).json(row);
 });
 
-// PUT /api/trips/:id
 router.put("/:id", (req: Request, res: Response) => {
+  const id = req.params.id as string;
+  const existing = db.query(`SELECT id FROM ${table} WHERE id = ?`).get(id);
+  if (!existing) { res.status(404).json({ error: "Not found" }); return; }
+
   const parsed = UpdateTripSchema.safeParse(req.body);
-  if (!parsed.success) {
-    res.status(400).json({ error: parsed.error.flatten() });
-    return;
-  }
+  if (!parsed.success) { res.status(400).json({ error: parsed.error.flatten() }); return; }
 
-  const result = tripService.update(req.params.id as string, parsed.data);
-  if (!result) {
-    res.status(404).json({ error: "Trip not found" });
-    return;
-  }
-  res.json(result);
+  const d = parsed.data;
+  const set = (col: string, val: unknown) => db.run(`UPDATE ${table} SET ${col} = ? WHERE id = ?`, [val, id]);
+
+  if (d.tripNumber !== undefined) set("trip_number", d.tripNumber);
+  if (d.vehicleId !== undefined) set("vehicle_id", d.vehicleId);
+  if (d.driverId !== undefined) set("driver_id", d.driverId);
+  if (d.source !== undefined) set("source", d.source);
+  if (d.destination !== undefined) set("destination", d.destination);
+  if (d.cargoWeight !== undefined) set("cargo_weight", d.cargoWeight);
+  if (d.plannedDistance !== undefined) set("planned_distance", d.plannedDistance);
+  if (d.actualDistance !== undefined) set("actual_distance", d.actualDistance);
+  if (d.startOdometer !== undefined) set("start_odometer", d.startOdometer);
+  if (d.endOdometer !== undefined) set("end_odometer", d.endOdometer);
+  if (d.fuelConsumed !== undefined) set("fuel_consumed", d.fuelConsumed);
+  if (d.revenue !== undefined) set("revenue", d.revenue);
+  if (d.status !== undefined) set("status", d.status);
+  if (d.dispatchedAt !== undefined) set("dispatched_at", d.dispatchedAt);
+  if (d.completedAt !== undefined) set("completed_at", d.completedAt);
+
+  const row = db.query(`SELECT ${cols} FROM ${table} WHERE id = ?`).get(id);
+  res.json(row);
 });
 
-// POST /api/trips/:id/dispatch
-router.post("/:id/dispatch", (req: Request, res: Response) => {
-  try {
-    const trip = tripService.dispatch(req.params.id as string);
-    res.json(trip);
-  } catch (err: any) {
-    const status = err.status || 500;
-    res.status(status).json({ error: err.message });
-  }
-});
-
-// POST /api/trips/:id/complete
-router.post("/:id/complete", (req: Request, res: Response) => {
-  try {
-    const { endOdometer, fuelConsumed } = req.body as { endOdometer?: number; fuelConsumed?: number };
-    const trip = tripService.complete(req.params.id as string, endOdometer, fuelConsumed);
-    res.json(trip);
-  } catch (err: any) {
-    const status = err.status || 500;
-    res.status(status).json({ error: err.message });
-  }
-});
-
-// POST /api/trips/:id/cancel
-router.post("/:id/cancel", (_req: Request, res: Response) => {
-  try {
-    const trip = tripService.cancel(_req.params.id as string);
-    res.json(trip);
-  } catch (err: any) {
-    const status = err.status || 500;
-    res.status(status).json({ error: err.message });
-  }
-});
-
-// DELETE /api/trips/:id
 router.delete("/:id", (req: Request, res: Response) => {
-  const deleted = tripService.delete(req.params.id as string);
-  if (!deleted) {
-    res.status(404).json({ error: "Trip not found" });
-    return;
-  }
+  const id = req.params.id as string;
+  const existing = db.query(`SELECT id FROM ${table} WHERE id = ?`).get(id);
+  if (!existing) { res.status(404).json({ error: "Not found" }); return; }
+  db.run(`DELETE FROM ${table} WHERE id = ?`, [id]);
   res.status(204).send();
 });
 

@@ -1,9 +1,15 @@
+import Bun from "bun";
 import { Router, Request, Response } from "express";
+import { v4 as uuid } from "uuid";
 import { SignUpSchema, SignInSchema } from "@odoo-hackathon-26/shared";
+import { createToken } from "../../util/jwt";
 import { authRequired } from "../../util/auth";
-import { authService } from "../../services/auth.service";
+import db from "../../db/index";
 
 const router = Router();
+
+const userCols =
+  "id, role_id AS roleId, name, email, is_active AS isActive, created_at AS createdAt, updated_at AS updatedAt";
 
 // POST /api/auth/signup
 router.post("/signup", (req: Request, res: Response) => {
@@ -13,19 +19,33 @@ router.post("/signup", (req: Request, res: Response) => {
     return;
   }
 
-  const { email, roleId } = parsed.data;
+  const { name, email, password, roleId } = parsed.data;
 
-  if (!authService.roleExists(roleId)) {
+  const existingRole = db
+    .query("SELECT id FROM roles WHERE id = ?")
+    .get(roleId);
+  if (!existingRole) {
     res.status(400).json({ error: "Invalid roleId" });
     return;
   }
 
-  if (authService.emailExists(email)) {
+  const emailTaken = db
+    .query("SELECT id FROM users WHERE email = ?")
+    .get(email);
+  if (emailTaken) {
     res.status(409).json({ error: "Email already registered" });
     return;
   }
 
-  const user = authService.signup(parsed.data);
+  const id = uuid();
+  const hash = Bun.password.hashSync(password);
+
+  db.run(
+    "INSERT INTO users (id, role_id, name, email, password_hash) VALUES (?, ?, ?, ?, ?)",
+    [id, roleId, name, email, hash],
+  );
+
+  const user = db.query(`SELECT ${userCols} FROM users WHERE id = ?`).get(id);
   res.status(201).json(user);
 });
 
@@ -37,14 +57,37 @@ router.post("/signin", async (req: Request, res: Response) => {
     return;
   }
 
-  const result = await authService.signin(parsed.data);
+  const { email, password } = parsed.data;
 
-  if (!result) {
+  const row = db
+    .query(
+      "SELECT id, role_id AS roleId, password_hash AS passwordHash, is_active AS isActive FROM users WHERE email = ?",
+    )
+    .get(email) as
+    | { id: string; roleId: string; passwordHash: string; isActive: number }
+    | undefined;
+
+  if (!row) {
+    res.status(401).json({ error: "Invalid email or password" });
+    return;
+  }
+  if (!row.isActive) {
+    res.status(403).json({ error: "Account is deactivated" });
+    return;
+  }
+
+  const valid = Bun.password.verifySync(password, row.passwordHash);
+  if (!valid) {
     res.status(401).json({ error: "Invalid email or password" });
     return;
   }
 
-  res.json(result);
+  const token = await createToken({ userId: row.id, roleId: row.roleId });
+
+  const user = db
+    .query(`SELECT ${userCols} FROM users WHERE id = ?`)
+    .get(row.id);
+  res.json({ token, user });
 });
 
 // POST /api/auth/logout
@@ -54,7 +97,9 @@ router.post("/logout", (_req: Request, res: Response) => {
 
 // GET /api/auth/me
 router.get("/me", authRequired, (req: Request, res: Response) => {
-  const user = authService.getUserById(req.user!.userId);
+  const user = db
+    .query(`SELECT ${userCols} FROM users WHERE id = ?`)
+    .get(req.user!.userId);
   if (!user) {
     res.status(404).json({ error: "User not found" });
     return;
@@ -62,9 +107,10 @@ router.get("/me", authRequired, (req: Request, res: Response) => {
   res.json(user);
 });
 
-// GET /api/auth/roles
+//GET /api/auth/roles
 router.get("/roles", (_req: Request, res: Response) => {
-  res.json(authService.listRoles());
+  const roles = db.query("SELECT id, name FROM roles").all();
+  res.json(roles);
 });
 
 export default router;

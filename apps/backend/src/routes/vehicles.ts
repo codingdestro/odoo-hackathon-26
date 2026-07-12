@@ -5,7 +5,6 @@ import {
 } from "@odoo-hackathon-26/shared";
 import { authRequired } from "../util/auth";
 import { vehicleService } from "../services/vehicle.service";
-import { DuplicateError } from "../services/errors";
 
 const router = Router();
 
@@ -36,11 +35,7 @@ router.post("/", (req: Request, res: Response) => {
 
   if (vehicleService.findByRegistration(parsed.data.registrationNumber)) {
     res.status(409).json({
-      error: {
-        fieldErrors: {
-          registrationNumber: ["Registration number already exists"],
-        },
-      },
+      error: { fieldErrors: { registrationNumber: ["Registration number already exists"] } },
     });
     return;
   }

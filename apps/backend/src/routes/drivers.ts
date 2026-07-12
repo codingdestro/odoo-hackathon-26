@@ -6,7 +6,6 @@ import {
 } from "@odoo-hackathon-26/shared";
 import { authRequired } from "../util/auth";
 import { driverService } from "../services/driver.service";
-import { DuplicateError } from "../services/errors";
 
 const router = Router();
 
@@ -37,9 +36,7 @@ router.post("/", (req: Request, res: Response) => {
 
   if (driverService.findByLicenseNumber(parsed.data.licenseNumber)) {
     res.status(409).json({
-      error: {
-        fieldErrors: { licenseNumber: ["License number already exists"] },
-      },
+      error: { fieldErrors: { licenseNumber: ["License number already exists"] } },
     });
     return;
   }
@@ -78,10 +75,7 @@ router.put("/:id", (req: Request, res: Response) => {
 router.put("/:id/status", (req: Request, res: Response) => {
   const { status } = req.body as { status?: string };
 
-  if (
-    !status ||
-    !Object.values(DriverStatus).includes(status as typeof DriverStatus._type)
-  ) {
+  if (!status || !Object.values(DriverStatus).includes(status as typeof DriverStatus._type)) {
     res.status(400).json({ error: "Invalid status" });
     return;
   }

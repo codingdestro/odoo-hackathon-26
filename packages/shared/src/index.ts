@@ -128,7 +128,7 @@ export const TripSchema = z.object({
   createdAt: z.string().datetime(),
 });
 export const CreateTripSchema = z.object({
-  tripNumber: z.string().min(1).optional(),
+  tripNumber: z.string().min(1),
   vehicleId: z.string().uuid(),
   driverId: z.string().uuid(),
   source: z.string().min(1),
@@ -225,21 +225,6 @@ export const UpdateExpenseSchema = CreateExpenseSchema.partial();
 export type Expense = z.infer<typeof ExpenseSchema>;
 export type CreateExpense = z.infer<typeof CreateExpenseSchema>;
 export type UpdateExpense = z.infer<typeof UpdateExpenseSchema>;
-
-// ── Auth ─────────────────────────────────────────────────────────────────────
-
-export const SignUpSchema = z.object({
-  name: z.string().min(1),
-  email: z.string().email(),
-  password: z.string().min(6),
-  roleId: z.string().uuid(),
-});
-export const SignInSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(1),
-});
-export type SignUp = z.infer<typeof SignUpSchema>;
-export type SignIn = z.infer<typeof SignInSchema>;
 
 // ── Items (legacy) ───────────────────────────────────────────────────────────
 
