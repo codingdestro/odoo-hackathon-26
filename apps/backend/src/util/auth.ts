@@ -1,5 +1,5 @@
 import type { Request, Response, NextFunction } from "express";
-import { verifyToken, type JwtPayload } from "../util/jwt.js";
+import { verifyToken, type JwtPayload } from "../util/jwt";
 
 declare global {
   namespace Express {
@@ -9,7 +9,11 @@ declare global {
   }
 }
 
-export async function authRequired(req: Request, res: Response, next: NextFunction) {
+export async function authRequired(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
   const header = req.headers.authorization;
 
   if (!header?.startsWith("Bearer ")) {
