@@ -37,6 +37,34 @@ All `*`-marked routes require `Authorization: Bearer <token>`.
 | `PUT` | `/drivers/:id/status` | `*` | `{ status: DriverStatus }` | `DriverSchema` |
 | `DELETE` | `/drivers/:id` | `*` | — | 204 |
 
+## Trips
+
+| Method | Path | Auth | Body Schema | Response |
+|--------|------|------|-------------|----------|
+| `GET` | `/trips` | `*` | — | `TripSchema[]` |
+| `GET` | `/trips/:id` | `*` | — | `TripSchema` |
+| `POST` | `/trips` | `*` | `CreateTripSchema` | `TripSchema` (201) |
+| `PUT` | `/trips/:id` | `*` | `UpdateTripSchema` | `TripSchema` |
+| `POST` | `/trips/:id/dispatch` | `*` | — | `TripSchema` |
+| `DELETE` | `/trips/:id` | `*` | — | 204 |
+
+### Dispatch Rules
+
+`POST /trips/:id/dispatch` enforces the following in a single database transaction:
+
+1. **Trip must be in `DRAFT` status**
+2. **Vehicle must be `AVAILABLE`** — rejects if `ON_TRIP`, `IN_SHOP`, or `RETIRED`
+3. **Driver must not be `SUSPENDED` or `ON_TRIP`** — rejects if suspended or already on trip
+4. **Driver license must not be expired**
+5. **Cargo weight ≤ vehicle max load capacity** — rejects if overloaded
+
+On success (all checks pass, single transaction):
+- Trip → status = `DISPATCHED`, `dispatched_at` = now
+- Vehicle → status = `ON_TRIP`
+- Driver → status = `ON_TRIP`
+
+If any update fails, the entire transaction rolls back.
+
 ## Health
 
 | Method | Path | Auth | Response |
@@ -45,6 +73,6 @@ All `*`-marked routes require `Authorization: Bearer <token>`.
 
 ---
 
-**Enums**: `VehicleStatus` (`AVAILABLE` | `ON_TRIP` | `IN_SHOP` | `RETIRED`), `DriverStatus` (`AVAILABLE` | `ON_TRIP` | `OFF_DUTY` | `SUSPENDED`).
+**Enums**: `VehicleStatus` (`AVAILABLE` | `ON_TRIP` | `IN_SHOP` | `RETIRED`), `DriverStatus` (`AVAILABLE` | `ON_TRIP` | `OFF_DUTY` | `SUSPENDED`), `TripStatus` (`DRAFT` | `DISPATCHED` | `COMPLETED` | `CANCELLED`).
 
 All schemas defined in `@odoo-hackathon-26/shared`.
